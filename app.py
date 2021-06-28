@@ -25,7 +25,8 @@ You'll be able to import your data from a CSV file, visualize trends and feature
 ### Step 1: Upload Live Data directly from Yahoo Financials
 """
 import pandas_datareader as pdr
-from datetime import datetime
+from datetime import date
+current_date = date.today()
 import matplotlib.pyplot as plt
 
 #define variable for start and end time
@@ -33,12 +34,11 @@ import matplotlib.pyplot as plt
 # data obtained from Yahoo Financials
 #define variable for start and end time
 start = datetime(2007, 1, 1)
-end = datetime.now()
-
-AUDUSD = pdr.get_data_fred('DEXUSAL', start, end)
+end = current_date
+USDAUD_data = yf.download('AUD=X', start, end)
 plt.figure(figsize=(10, 7))
-plt.plot(AUDUSD)       
-plt.title('AUDUSD Prices')
+plt.plot(USDAUD_data)       
+plt.title('USDAUD Prices')
                                 
 
 """
@@ -54,12 +54,14 @@ min_value = 1, max_value = 365)
 m = Prophet(daily_seasonality=True, weekly_seasonality=True,yearly_seasonality=True)
 m.add_seasonality(name='monthly', period=30.5, fourier_order=5)
 m.add_country_holidays(country_name='AU')
-m.fit(AUDUSD)
+m.fit(USDAUD2)
 
-#predicting for the next input from above
-future = m.make_future_dataframe(periods=periods_input, include_history=True)
+#predicting for the next 7 days from 2019-04 to 2019-08
+future = m.make_future_dataframe(periods=7, include_history=True)
 forecast = m.predict(future)
 forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
+
+
 
 """
 ### Step 3: Visualize Forecast Data
@@ -87,6 +89,16 @@ The below visual shows future predicted values. "yhat" is the predicted value, a
     fig2 = m.plot_components(forecast)
     st.write(fig2)
 
+model = NeuralProphet(n_changepoints=100,
+                      trend_reg=0.05,
+                      yearly_seasonality=False,
+                      weekly_seasonality=False,
+                      daily_seasonality=False)
+
+metrics = model.fit(USDAUD2, validate_each_epoch=True, 
+                    valid_p=0.2, freq='D', 
+                    plot_live_loss=True, 
+                    epochs=100)
 
 """
 ### Step 4: Download the Forecast Data
