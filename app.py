@@ -39,7 +39,13 @@ USDAUD_data = yf.download('AUD=X', start, end)
 plt.figure(figsize=(10, 7))
 plt.plot(USDAUD_data)       
 plt.title('USDAUD Prices')
-                                
+
+USDAUD_data.drop(column=['Open', 'High', 'Low', 'Adj Close', 'Volume'], axis=1, inplace=True)
+USDAUD_data
+
+USDAUD2 = USDAUD_data.reset_index().rename(columns={'Date': 'ds', 'Close': 'y'})
+USDAUD2.head                  
+                  
 
 """
 ### Step 2: Select Forecast Horizon
@@ -60,6 +66,57 @@ m.fit(USDAUD2)
 future = m.make_future_dataframe(periods=7, include_history=True)
 forecast = m.predict(future)
 forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail()
+
+fig1 = m.plot(forecast)
+
+fig2 = m.plot_components(forecast)
+
+
+#model for NeuralProphet
+model = NeuralProphet(n_changepoints=100,
+                      trend_reg=0.05,
+                      yearly_seasonality=False,
+                      weekly_seasonality=False,
+                      daily_seasonality=False)
+
+metrics = model.fit(USDAUD2, validate_each_epoch=True, 
+                    valid_p=0.2, freq='D', 
+                    plot_live_loss=True, 
+                    epochs=100)
+
+def plot_forecast(model, data, periods, historic_pred=True, highlight_steps_ahead=None):
+    
+    future = model.make_future_dataframe(data, 
+                                         periods=periods, 
+                                         n_historic_predictions=historic_pred)
+    forecast = model.predict(future)
+    
+    if highlight_steps_ahead is not None:
+        model = model.highlight_nth_step_ahead_of_each_forecast(highlight_steps_ahead)
+        model.plot_last_forecast(forecast)
+    else:    
+        model.plot(forecast)
+
+plot_forecast(model, USDAUD2, periods=60)
+
+plot_forecast(model, USDAUD2, periods=60, historic_pred=False)
+
+
+#Seasonality
+model = NeuralProphet(n_changepoints=100,
+                      trend_reg=0.5,
+                      yearly_seasonality=True,
+                      weekly_seasonality=True,
+                      daily_seasonality=True)
+
+metrics = model.fit(USDAUD2, validate_each_epoch=True, 
+                    valid_p=0.2, freq='D', 
+                    plot_live_loss=True, 
+                    epochs=100)
+
+plot_forecast(model, USDAUD2, periods=60, historic_pred=True)
+
+plot_forecast(model, USDAUD2, periods=60, historic_pred=False)
 
 
 
@@ -89,16 +146,28 @@ The below visual shows future predicted values. "yhat" is the predicted value, a
     fig2 = m.plot_components(forecast)
     st.write(fig2)
 
-model = NeuralProphet(n_changepoints=100,
-                      trend_reg=0.05,
-                      yearly_seasonality=False,
-                      weekly_seasonality=False,
-                      daily_seasonality=False)
+#using AR-Net
+model = NeuralProphet(
+    n_forecasts=60,
+    n_lags=60,
+    changepoints_range=0.95,
+    n_changepoints=100,
+    yearly_seasonality=True,
+    weekly_seasonality=False,
+    daily_seasonality=False,
+    batch_size=64,
+    epochs=100,
+    learning_rate=1.0,
+)
 
-metrics = model.fit(USDAUD2, validate_each_epoch=True, 
-                    valid_p=0.2, freq='D', 
-                    plot_live_loss=True, 
-                    epochs=100)
+model.fit(USDAUD2, 
+          freq='D',
+          valid_p=0.2,
+          epochs=100)
+
+plot_forecast(model, USDAUD2, periods=60, historic_pred=True)
+
+plot_forecast(model, USDAUD2, periods=60, historic_pred=False, highlight_steps_ahead=60)
 
 """
 ### Step 4: Download the Forecast Data
