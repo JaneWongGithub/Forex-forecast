@@ -1,7 +1,7 @@
 fbprophet
 numpy==1.18.4
-streamlit==0.83.0
+streamlit
 pandas==1.0.3
 pystan==2.19.1.1
-neuralprophet==0.2.7
+neuralprophet
 matplotlib==3.3.4
