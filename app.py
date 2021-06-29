@@ -16,22 +16,26 @@ from yahoofinancials import YahooFinancials
 
 st.title('📈 Automated FOREX USD-AUD Forecasting')
 
-"""
-This data app uses Facebook's open-source Prophet library to automatically generate future forecast values from an imported dataset.
-You'll be able to import your data from a CSV file, visualize trends and features, analyze forecast performance, and finally download the created forecast 😵 
+periods_input = st.number_input('How many periods would you like to forecast into the future?',
+min_value = 1, max_value = 7)
 
+#model for fbprophet:
+m = NeuralProphet(daily_seasonality=True, weekly_seasonality=True,yearly_seasonality=True)
+m.add_seasonality(name='monthly', period=30.5, fourier_order=5)
+m.add_country_holidays(country_name='AU')
+m.fit(USDAUD2)
 
 """
-### Step 1: Upload Live Data directly from Yahoo Financials
+###upload Live Data directly from Yahoo Financials
 """
 import pandas_datareader as pdr
 from datetime import date
 current_date = date.today()
 import matplotlib.pyplot as plt
 
-#define variable for start and end time
 
-# data obtained from Yahoo Financials
+
+#data obtained from Yahoo Financials
 #define variable for start and end time
 start = datetime(2007, 1, 1)
 end = current_date
@@ -54,7 +58,7 @@ Keep in mind that forecasts become less accurate with larger forecast horizons.
 """
 
 periods_input = st.number_input('How many periods would you like to forecast into the future?',
-min_value = 1, max_value = 365)
+min_value = 1, max_value = 7)
 
 #model for fbprophet:
 m = Prophet(daily_seasonality=True, weekly_seasonality=True,yearly_seasonality=True)
