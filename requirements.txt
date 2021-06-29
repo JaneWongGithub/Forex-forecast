@@ -1,4 +1,4 @@
-fbprophet==0.7.1
+fbprophet
 numpy==1.18.4
 streamlit==0.83.0
 pandas==1.0.3
